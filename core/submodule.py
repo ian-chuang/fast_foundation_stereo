@@ -610,16 +610,26 @@ class ChannelAttentionEnhancement(nn.Module):
         """
         super(ChannelAttentionEnhancement, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        
+        # REMOVED: self.max_pool = nn.AdaptiveMaxPool2d(1)
+        # We will use torch.amax in the forward pass instead for ONNX compatibility.
 
-        self.fc = nn.Sequential(nn.Conv2d(in_planes, in_planes // 16, 1, bias=False),
-                               nn.ReLU(),
-                               nn.Conv2d(in_planes // 16, in_planes, 1, bias=False))
+        self.fc = nn.Sequential(
+            nn.Conv2d(in_planes, in_planes // 16, 1, bias=False),
+            nn.ReLU(),
+            nn.Conv2d(in_planes // 16, in_planes, 1, bias=False)
+        )
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
+        # Average pooling usually exports perfectly to GlobalAveragePool
         avg_out = self.fc(self.avg_pool(x))
-        max_out = self.fc(self.max_pool(x))
+        
+        # REPLACEMENT: Global Max Pooling using torch.amax over spatial dimensions (H=2, W=3)
+        # keepdim=True ensures the output shape is (B, C, 1, 1), matching AdaptiveMaxPool2d(1)
+        x_max = torch.amax(x, dim=(2, 3), keepdim=True)
+        max_out = self.fc(x_max)
+        
         out = avg_out + max_out
         return self.sigmoid(out)
 
