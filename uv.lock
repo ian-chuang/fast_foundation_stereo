@@ -299,7 +299,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "einops", specifier = ">=0.8.2" },
-    { name = "imageio", specifier = ">=2.37.3" },
+    { name = "imageio", specifier = ">=2.37.0" },
     { name = "numpy", specifier = ">=1.26.0" },
     { name = "nvidia-modelopt", extras = ["onnx", "torch"], specifier = ">=0.44.0" },
     { name = "omegaconf", specifier = ">=2.3.1" },
