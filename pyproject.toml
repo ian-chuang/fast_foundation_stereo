@@ -11,7 +11,7 @@ requires-python = ">=3.11,<3.12"
 dependencies = [
   "einops>=0.8.2",
   "imageio>=2.37.3",
-  "numpy>=2.4.6",
+  "numpy>=1.26.0",
   "nvidia-modelopt[onnx,torch]>=0.44.0",
   "omegaconf>=2.3.1",
   "onnx>=1.21.0",
