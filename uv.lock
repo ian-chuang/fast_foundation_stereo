@@ -300,7 +300,7 @@ dependencies = [
 requires-dist = [
     { name = "einops", specifier = ">=0.8.2" },
     { name = "imageio", specifier = ">=2.37.3" },
-    { name = "numpy", specifier = ">=2.4.6" },
+    { name = "numpy", specifier = ">=1.26.0" },
     { name = "nvidia-modelopt", extras = ["onnx", "torch"], specifier = ">=0.44.0" },
     { name = "omegaconf", specifier = ">=2.3.1" },
     { name = "onnx", specifier = ">=1.21.0" },
