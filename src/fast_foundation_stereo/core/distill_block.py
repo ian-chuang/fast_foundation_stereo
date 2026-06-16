@@ -1,7 +1,5 @@
 import os,sys
-code_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(code_dir+'/../')
-from foundation_stereo_ori.submodule import FeatureAtt
+from fast_foundation_stereo.core.submodule import FeatureAtt
 import torch
 import torch.nn as nn
 import Utils as U

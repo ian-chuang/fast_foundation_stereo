@@ -7,10 +7,8 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os,sys
-code_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(f'{code_dir}/../')
 from omegaconf import OmegaConf
-from core.utils.utils import InputPadder
+from fast_foundation_stereo.core.utils.utils import InputPadder
 import argparse, torch, logging, yaml, time
 import numpy as np
 from Utils import AMP_DTYPE, set_logging_format, set_seed
@@ -52,24 +50,16 @@ if __name__=="__main__":
   logging.info(f"Image size: {H}x{W}, warmup: {args.warmup}, total: {args.total}")
 
   times = []
-  peak_memories = []
   with torch.amp.autocast('cuda', enabled=True, dtype=AMP_DTYPE):
     for i in range(args.total):
-      torch.cuda.reset_peak_memory_stats()
       torch.cuda.synchronize()
       t0 = time.perf_counter()
       disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True, optimize_build_volume='triton')
       torch.cuda.synchronize()
       elapsed = time.perf_counter() - t0
-      peak_mem = torch.cuda.max_memory_allocated() / (1024 ** 2)
       times.append(elapsed)
-      peak_memories.append(peak_mem)
-      logging.info(f"Iter {i:2d}: {elapsed*1000:.1f} ms, peak mem: {peak_mem:.1f} MB {'(warmup)' if i < args.warmup else ''}")
+      logging.info(f"Iter {i:2d}: {elapsed*1000:.1f} ms {'(warmup)' if i < args.warmup else ''}")
 
   measure_times = times[args.warmup:]
-  measure_mems = peak_memories[args.warmup:]
   avg = np.mean(measure_times) * 1000
-  avg_mem = np.mean(measure_mems)
-  max_mem = np.max(measure_mems)
   logging.info(f"Vanilla Pytorch speed average (after warmup): {avg:.1f}[ms] over {len(measure_times)} iters")
-  logging.info(f"Peak GPU memory (after warmup): avg {avg_mem:.1f} MB, max {max_mem:.1f} MB")

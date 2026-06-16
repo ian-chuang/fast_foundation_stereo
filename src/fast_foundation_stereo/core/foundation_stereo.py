@@ -5,25 +5,20 @@ import numpy as np
 import sys,os
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
-from core.update import BasicSelectiveMultiUpdateBlock
-from core.extractor import ContextNetSharedBackbone, Feature
-from core.geometry import Combined_Geo_Encoding_Volume
-from core.submodule import (
+from fast_foundation_stereo.core.update import BasicSelectiveMultiUpdateBlock
+from fast_foundation_stereo.core.extractor import ContextNetSharedBackbone, Feature
+from fast_foundation_stereo.core.geometry import Combined_Geo_Encoding_Volume
+from fast_foundation_stereo.core.submodule import (
     BasicConv, Conv3dNormActReduced, ResnetBasicBlock3D, BasicConv_IN, Conv2x,
     FeatureAtt, CostVolumeDisparityAttention, SpatialAttentionExtractor,
     ChannelAttentionEnhancement, disparity_regression, context_upsample,
     build_gwc_volume_optimized_pytorch1, build_gwc_volume_triton,
     build_concat_volume_optimized_pytorch1, build_concat_volume_optimized_pytorch,
 )
-from core.utils.utils import InputPadder
+from fast_foundation_stereo.core.utils.utils import InputPadder
 import Utils as U
 import time
 
-sys.modules['foundation_stereo_ori'] = sys.modules['core']
-sys.modules['foundation_stereo_ori.submodule'] = sys.modules['core.submodule']
-sys.modules['foundation_stereo_ori.extractor'] = sys.modules['core.extractor']
-sys.modules['foundation_stereo_ori.update'] = sys.modules['core.update']
-sys.modules['foundation_stereo_ori.foundation_stereo'] = sys.modules['core.foundation_stereo']
 class FoundationStereo(nn.Module):
   pass
 

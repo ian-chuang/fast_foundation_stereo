@@ -1,9 +1,9 @@
 import torch,os,sys
 import torch.nn as nn
 import torch.nn.functional as F
-code_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(f'{code_dir}/../')
-from core.submodule import Conv2x_IN
+# code_dir = os.path.dirname(os.path.realpath(__file__))
+# sys.path.append(f'{code_dir}/../')
+from fast_foundation_stereo.core.submodule import Conv2x_IN
 import timm
 
 

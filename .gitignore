@@ -12,3 +12,6 @@ weights/*
 output/
 .claude/
 cpp/build/
+
+output_demo/
+Log/

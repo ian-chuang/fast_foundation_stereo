@@ -29,7 +29,7 @@ repo_dir = code_dir.parent
 sys.path.append(str(repo_dir))
 
 from Utils import set_logging_format, set_seed, vis_disparity
-from build_plugin_trt import (
+from fast_foundation_stereo.scripts.build_plugin_trt import (
     PLUGIN_NAME,
     find_default_plugin_library,
     find_plugin_creator,

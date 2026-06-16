@@ -34,7 +34,7 @@ import yaml
 from omegaconf import OmegaConf
 from torch.onnx import symbolic_helper
 
-from core.foundation_stereo import TrtFeatureRunner, TrtPostRunner
+from src.fast_foundation_stereo.core.foundation_stereo import TrtFeatureRunner, TrtPostRunner
 
 
 class FFSGWCVolumeOp(torch.autograd.Function):

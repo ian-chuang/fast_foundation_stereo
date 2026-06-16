@@ -1,64 +1,80 @@
+# Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
 import os,sys
-code_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(f'{code_dir}/../')
+from imageio import core
+from fast_foundation_stereo import core
 from omegaconf import OmegaConf
-from core.utils.utils import InputPadder
-import argparse, torch, logging, yaml
-import imageio
+from fast_foundation_stereo.core.utils.utils import InputPadder
+import argparse, torch, imageio, logging, yaml
 import numpy as np
 from Utils import (
-    set_logging_format, set_seed, vis_disparity,
+    AMP_DTYPE, set_logging_format, set_seed, vis_disparity,
     depth2xyzmap, toOpen3dCloud, o3d,
 )
-from core.foundation_stereo import TrtRunner
 import cv2
-
-
-def resolve_onnx_cfg_path(onnx_dir: str) -> str:
-  onnx_dir = os.path.normpath(onnx_dir)
-  candidates = [
-    os.path.join(onnx_dir, 'onnx.yaml'),
-    os.path.join(os.path.dirname(onnx_dir), 'onnx.yaml'),
-  ]
-  for p in candidates:
-    if os.path.exists(p):
-      return p
-  raise FileNotFoundError(
-    f"onnx.yaml not found. Looked in: {candidates}. "
-    "Please run scripts/make_onnx.py first to generate ONNX metadata."
-  )
 
 
 if __name__=="__main__":
   code_dir = os.path.dirname(os.path.realpath(__file__))
   parser = argparse.ArgumentParser()
-  parser.add_argument('--onnx_dir', default=f'{code_dir}/output', type=str)
-  parser.add_argument('--left_file', default=f'{code_dir}/../assets/left.png', type=str)
-  parser.add_argument('--right_file', default=f'{code_dir}/../assets/right.png', type=str)
-  parser.add_argument('--intrinsic_file', default=f'{code_dir}/../assets/K.txt', type=str, help='camera intrinsic matrix and baseline file')
+  parser.add_argument('--model_dir', default=f'{code_dir}/../weights/23-36-37/model_best_bp2_serialize.pth', type=str)
+  parser.add_argument('--left_file', default=f'{code_dir}/../demo_data/left.png', type=str)
+  parser.add_argument('--right_file', default=f'{code_dir}/../demo_data/right.png', type=str)
+  parser.add_argument('--intrinsic_file', default=f'{code_dir}/../demo_data/K.txt', type=str, help='camera intrinsic matrix and baseline file')
   parser.add_argument('--out_dir', default='/home/bowen/debug/stereo_output', type=str)
   parser.add_argument('--remove_invisible', default=1, type=int)
-  parser.add_argument('--denoise_cloud', default=1, type=int)
+  parser.add_argument('--denoise_cloud', default=0, type=int)
   parser.add_argument('--denoise_nb_points', type=int, default=30, help='number of points to consider for radius outlier removal')
   parser.add_argument('--denoise_radius', type=float, default=0.03, help='radius to use for outlier removal')
+  parser.add_argument('--scale', default=1, type=float)
+  parser.add_argument('--hiera', default=0, type=int)
   parser.add_argument('--get_pc', type=int, default=1, help='save point cloud output')
+  parser.add_argument('--valid_iters', type=int, default=8, help='number of flow-field updates during forward pass')
+  parser.add_argument('--max_disp', type=int, default=192, help='maximum disparity')
   parser.add_argument('--zfar', type=float, default=100, help="max depth to include in point cloud")
   args = parser.parse_args()
 
   set_logging_format()
   set_seed(0)
   torch.autograd.set_grad_enabled(False)
-  os.makedirs(args.out_dir, exist_ok=True)
 
-  onnx_cfg_path = resolve_onnx_cfg_path(args.onnx_dir)
-  with open(onnx_cfg_path, 'r') as ff:
+  os.system(f'rm -rf {args.out_dir} && mkdir -p {args.out_dir}')
+
+  with open(f'{os.path.dirname(args.model_dir)}/cfg.yaml', 'r') as ff:
     cfg:dict = yaml.safe_load(ff)
   for k in args.__dict__:
     if args.__dict__[k] is not None:
       cfg[k] = args.__dict__[k]
   args = OmegaConf.create(cfg)
   logging.info(f"args:\n{args}")
-  model = TrtRunner(args, args.onnx_dir+'/feature_runner.engine', args.onnx_dir+'/post_runner.engine')
+
+  import sys
+  import fast_foundation_stereo.core as core
+  import fast_foundation_stereo.core.submodule as submodule
+  import fast_foundation_stereo.core.extractor as extractor
+  import fast_foundation_stereo.core.update as update
+  import fast_foundation_stereo.core.foundation_stereo as foundation_stereo
+
+  sys.modules["core"] = core
+  sys.modules["core.submodule"] = submodule
+  sys.modules["core.extractor"] = extractor
+  sys.modules["core.update"] = update
+  sys.modules["core.foundation_stereo"] = foundation_stereo
+
+
+  model = torch.load(args.model_dir, map_location='cpu', weights_only=False)
+  model.args.valid_iters = args.valid_iters
+  model.args.max_disp = args.max_disp
+
+  model.cuda().eval()
+
+  scale = args.scale
 
   img0 = imageio.imread(args.left_file)
   img1 = imageio.imread(args.right_file)
@@ -69,12 +85,8 @@ if __name__=="__main__":
   img1 = img1[...,:3]
   H,W = img0.shape[:2]
 
-  fx = args.image_size[1] / img0.shape[1]
-  fy = args.image_size[0] / img0.shape[0]
-  if fx != 1 or fy != 1:
-    logging.info(f">>>>>>>>>>>>>>>WARNING: resizing image to {args.image_size}, fx: {fx}, fy: {fy}, this is not recommended. It's best to make tensorrt engine with the same image size as the input image.")
-  img0 = cv2.resize(img0, fx=fx, fy=fy, dsize=None)
-  img1 = cv2.resize(img1, fx=fx, fy=fy, dsize=None)
+  img0 = cv2.resize(img0, fx=scale, fy=scale, dsize=None)
+  img1 = cv2.resize(img1, dsize=(img0.shape[1], img0.shape[0]))
   H,W = img0.shape[:2]
   img0_ori = img0.copy()
   img1_ori = img1.copy()
@@ -84,11 +96,18 @@ if __name__=="__main__":
 
   img0 = torch.as_tensor(img0).cuda().float()[None].permute(0,3,1,2)
   img1 = torch.as_tensor(img1).cuda().float()[None].permute(0,3,1,2)
+  padder = InputPadder(img0.shape, divis_by=32, force_square=False)
+  img0, img1 = padder.pad(img0, img1)
 
   logging.info(f"Start forward, 1st time run can be slow due to compilation")
-  disp = model.forward(img0, img1)
+  with torch.amp.autocast('cuda', enabled=True, dtype=AMP_DTYPE):
+    if not args.hiera:
+      disp = model.forward(img0, img1, iters=args.valid_iters, test_mode=True, optimize_build_volume='pytorch1')
+    else:
+      disp = model.run_hierachical(img0, img1, iters=args.valid_iters, test_mode=True, small_ratio=0.5)
   logging.info("forward done")
-  disp = disp.data.cpu().numpy().reshape(H,W).clip(0, None) * 1/fx
+  disp = padder.unpad(disp.float())
+  disp = disp.data.cpu().numpy().reshape(H,W).clip(0, None)
 
   cmap = None
   min_val = None
@@ -112,7 +131,7 @@ if __name__=="__main__":
       lines = f.readlines()
       K = np.array(list(map(float, lines[0].rstrip().split()))).astype(np.float32).reshape(3,3)
       baseline = float(lines[1])
-    K[:2] *= np.array([fx, fy], dtype=np.float32)[:, np.newaxis]
+    K[:2] *= scale
     depth = K[0,0]*baseline/disp
     np.save(f'{args.out_dir}/depth_meter.npy', depth)
     xyz_map = depth2xyzmap(depth, K)
@@ -125,6 +144,7 @@ if __name__=="__main__":
 
     if args.denoise_cloud:
       logging.info("[Optional step] denoise point cloud...")
+      pcd = pcd.voxel_down_sample(voxel_size=0.001)
       cl, ind = pcd.remove_radius_outlier(nb_points=args.denoise_nb_points, radius=args.denoise_radius)
       inlier_cloud = pcd.select_by_index(ind)
       o3d.io.write_point_cloud(f'{args.out_dir}/cloud_denoise.ply', inlier_cloud)

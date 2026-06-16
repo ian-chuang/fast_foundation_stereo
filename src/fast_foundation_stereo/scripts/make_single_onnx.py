@@ -54,16 +54,14 @@ import sys
 os.environ['TORCH_COMPILE_DISABLE'] = '1'
 os.environ['TORCHDYNAMO_DISABLE'] = '1'
 
-code_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(f'{code_dir}/../')
 
 import yaml
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from omegaconf import OmegaConf
-import core.foundation_stereo as _fs_module
-from core.foundation_stereo import FastFoundationStereo
+import fast_foundation_stereo.core.foundation_stereo as _fs_module
+from fast_foundation_stereo.core.foundation_stereo import FastFoundationStereo
 
 
 # ---------------------------------------------------------------------------
@@ -145,11 +143,11 @@ if __name__ == '__main__':
         description='Export Fast FoundationStereo as a single ONNX model')
     parser.add_argument(
         '--model_dir', type=str,
-        default=f'{code_dir}/../weights/model_best_bp2_serialize.pth',
+        default=f'weights/model_best_bp2_serialize.pth',
         help='Path to the serialized .pth model')
     parser.add_argument(
         '--save_path', type=str,
-        default=f'{code_dir}/output_single_onnx',
+        default=f'output_single_onnx',
         help='Directory to save the ONNX model and config')
     parser.add_argument('--height', type=int, default=480)
     parser.add_argument('--width', type=int, default=640)
@@ -175,6 +173,21 @@ if __name__ == '__main__':
         raise FileNotFoundError(f'Model file not found: {args.model_dir}')
 
     logging.info(f'Loading model from {args.model_dir}')
+
+    import sys
+    import fast_foundation_stereo.core as core
+    import fast_foundation_stereo.core.submodule as submodule
+    import fast_foundation_stereo.core.extractor as extractor
+    import fast_foundation_stereo.core.update as update
+    import fast_foundation_stereo.core.foundation_stereo as foundation_stereo
+
+    sys.modules["core"] = core
+    sys.modules["core.submodule"] = submodule
+    sys.modules["core.extractor"] = extractor
+    sys.modules["core.update"] = update
+    sys.modules["core.foundation_stereo"] = foundation_stereo
+
+
     model = torch.load(args.model_dir, map_location='cpu', weights_only=False)
     model.args.max_disp = args.max_disp
     model.args.valid_iters = args.valid_iters

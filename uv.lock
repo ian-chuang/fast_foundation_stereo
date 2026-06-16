@@ -266,9 +266,9 @@ wheels = [
 ]
 
 [[package]]
-name = "fast-foundationstereo"
+name = "fast-foundation-stereo"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "einops" },
     { name = "imageio" },
