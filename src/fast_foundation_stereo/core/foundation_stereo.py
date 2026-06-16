@@ -16,7 +16,7 @@ from fast_foundation_stereo.core.submodule import (
     build_concat_volume_optimized_pytorch1, build_concat_volume_optimized_pytorch,
 )
 from fast_foundation_stereo.core.utils.utils import InputPadder
-import Utils as U
+import fast_foundation_stereo.Utils as U
 import time
 
 class FoundationStereo(nn.Module):

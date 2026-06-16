@@ -6,7 +6,7 @@ sys.path.append(f'{code_dir}/../')
 import omegaconf, yaml, torch,pdb
 from omegaconf import OmegaConf
 from fast_foundation_stereo.core.foundation_stereo import FastFoundationStereo, TrtFeatureRunner, TrtPostRunner, build_gwc_volume_triton
-import Utils as U
+import fast_foundation_stereo.Utils as U
 
 
 class FoundationStereoOnnx(FastFoundationStereo):

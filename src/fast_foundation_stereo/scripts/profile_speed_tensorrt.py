@@ -2,7 +2,7 @@ import os,sys
 from omegaconf import OmegaConf
 import argparse, torch, logging, yaml, time
 import numpy as np
-from Utils import set_logging_format, set_seed
+from fast_foundation_stereo.Utils import set_logging_format, set_seed
 from fast_foundation_stereo.core.foundation_stereo import TrtRunner
 
 

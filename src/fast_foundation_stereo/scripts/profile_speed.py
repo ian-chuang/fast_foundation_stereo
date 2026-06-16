@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 from fast_foundation_stereo.core.utils.utils import InputPadder
 import argparse, torch, logging, yaml, time
 import numpy as np
-from Utils import AMP_DTYPE, set_logging_format, set_seed
+from fast_foundation_stereo.Utils import AMP_DTYPE, set_logging_format, set_seed
 
 
 if __name__=="__main__":

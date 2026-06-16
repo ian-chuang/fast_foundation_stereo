@@ -4,7 +4,7 @@ from fast_foundation_stereo.core.utils.utils import InputPadder
 import argparse, torch, logging, yaml
 import imageio
 import numpy as np
-from Utils import (
+from fast_foundation_stereo.Utils import (
     set_logging_format, set_seed, vis_disparity,
     depth2xyzmap, toOpen3dCloud, o3d,
 )

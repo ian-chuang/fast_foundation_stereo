@@ -55,7 +55,7 @@ import yaml
 code_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(f'{code_dir}/../')
 
-from Utils import (
+from fast_foundation_stereo.Utils import (
     set_logging_format, set_seed, vis_disparity,
     depth2xyzmap, toOpen3dCloud, o3d,
 )
