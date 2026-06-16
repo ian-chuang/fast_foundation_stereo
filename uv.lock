@@ -311,7 +311,7 @@ requires-dist = [
     { name = "pyorbbecsdk2", specifier = ">=2.0.18" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "scikit-image", specifier = ">=0.26.0" },
-    { name = "scipy", specifier = ">=1.17.1" },
+    { name = "scipy", specifier = ">=1.15.3" },
     { name = "tensorrt-cu12", specifier = "==11.0.0.114" },
     { name = "tensorrt-dispatch-cu12", specifier = "==11.0.0.114" },
     { name = "tensorrt-lean-cu12", specifier = "==11.0.0.114" },
