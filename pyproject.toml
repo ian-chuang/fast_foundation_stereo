@@ -20,7 +20,7 @@ dependencies = [
   "open3d>=0.19.0",
   "opencv-contrib-python>=4.13.0.92",
   "pyorbbecsdk2>=2.0.18",
-  "pyyaml>=6.0.3",
+  "pyyaml>=6.0.2",
   "scikit-image>=0.26.0",
   "scipy>=1.17.1",
   "tensorrt-cu12==11.0.0.114",

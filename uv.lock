@@ -309,7 +309,7 @@ requires-dist = [
     { name = "open3d", specifier = ">=0.19.0" },
     { name = "opencv-contrib-python", specifier = ">=4.13.0.92" },
     { name = "pyorbbecsdk2", specifier = ">=2.0.18" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "scikit-image", specifier = ">=0.26.0" },
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "tensorrt-cu12", specifier = "==11.0.0.114" },
